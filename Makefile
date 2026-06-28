@@ -47,15 +47,15 @@ check: ## Run full quality gate (lint + type-check + test)
 # ─── Database ────────────────────────────────────────────────────────────────
 
 db-migrate: ## Run all pending database migrations
-	cargo run -p phoenix-db --bin migrate
+	cargo run --package phoenix-db --bin migrate
 
 db-reset: ## Reset database to empty state (DESTRUCTIVE)
 	@echo "WARNING: This will delete all data. Press Ctrl+C to cancel."
 	@sleep 3
-	cargo run -p phoenix-db --bin db-reset
+	cargo run --package phoenix-db --bin reset
 
 db-seed: ## Seed database with test data
-	cargo run -p phoenix-db --bin seed
+	cargo run --package phoenix-db --bin seed
 
 # ─── Cleaning ────────────────────────────────────────────────────────────────
 

@@ -3737,4 +3737,255 @@ Never silently remove user data capabilities.
 
 ---
 
-# END OF MASTER SPECIFICATION (Sections 1–37)
+# SECTION 38 — CREDIT REPAIR & LEGAL DISPUTE ENGINE
+
+## Purpose
+
+Empower users to understand their legal rights under the FCRA, FDCPA, and related federal consumer protection laws, generate legally grounded dispute letters, track the dispute lifecycle, and systematically build both personal and business credit. This module is an **education and document-generation tool** — not legal advice. Every output must carry the disclaimer: *"This document is for educational and personal use only. Consult a licensed attorney or credit professional for legal advice."*
+
+---
+
+## Legal Framework Reference
+
+The engine is grounded in four federal statutes:
+
+| Statute | Authority | Key Right |
+|---|---|---|
+| FCRA § 609 | 15 U.S.C. § 1681g | Right to request your complete credit file and method of verification |
+| FCRA § 611 | 15 U.S.C. § 1681i | Right to dispute inaccurate or unverifiable information; bureau must respond within 30 days |
+| FCRA § 623 | 15 U.S.C. § 1681s-2 | Furnisher's duty to report accurate information; right to dispute directly with the data furnisher |
+| FCRA § 605B | 15 U.S.C. § 1681c-2 | Block of information resulting from identity theft within 4 business days |
+| FDCPA § 809 | 15 U.S.C. § 1692g | Debt validation — right to written verification of debt within 30 days of first contact |
+| FCRA § 605 | 15 U.S.C. § 1681c | Time limits on negative information (7 years, 10 years for bankruptcy) |
+
+---
+
+## Domain Model
+
+**DisputeCase:**
+id, negative_item_id, dispute_type (bureau/furnisher/debt_validation/identity_theft/goodwill), status (draft/letter_generated/sent/awaiting_response/resolved/escalated/closed), statute_basis, created_at, resolved_at
+
+**NegativeItem:**
+id, credit_report_id, creditor_name, account_number_masked, item_type (collection/late_payment/charge_off/judgment/bankruptcy/inquiry/identity_theft), balance, date_opened, date_reported, expected_removal_date, is_disputed
+
+**DisputeLetter:**
+id, case_id, template_id, generated_content_encrypted, recipient_type (bureau_equifax/bureau_experian/bureau_transunion/furnisher/debt_collector), delivery_method (certified_mail/electronic), tracking_number, sent_at, response_due_at, response_received_at
+
+**DisputeTimeline:**
+id, case_id, event_type (letter_sent/response_received/item_deleted/item_updated/escalated/closed), notes, occurred_at
+
+**BusinessCreditProfile:**
+id, business_id, ein_encrypted, duns_number, experian_biz_id, equifax_biz_id, paydex_score, intelliscore, business_credit_score, profile_established_at
+
+**VendorCreditAccount:**
+id, business_credit_profile_id, vendor_name, account_type (net30/net60/net15/revolving), credit_limit, balance, payment_history, reports_to_bureaus (JSON: ["dun_bradstreet","experian_biz","equifax_biz"]), date_opened
+
+---
+
+## Dispute Letter Templates
+
+All templates are versioned, parameterized, and stored as structured data — never hardcoded strings.
+
+### Template Catalog
+
+| ID | Name | Legal Basis | Recipient |
+|---|---|---|---|
+| `T01` | § 609 Credit File Request | FCRA § 609 | Bureau |
+| `T02` | § 611 Inaccuracy Dispute | FCRA § 611 | Bureau |
+| `T03` | § 623 Furnisher Direct Dispute | FCRA § 623 | Original Creditor / Furnisher |
+| `T04` | Debt Validation Request | FDCPA § 809 | Debt Collector |
+| `T05` | § 605B Identity Theft Block | FCRA § 605B | Bureau |
+| `T06` | 7-Year Obsolescence Removal | FCRA § 605 | Bureau |
+| `T07` | Goodwill Late Payment Removal | None (goodwill request) | Original Creditor |
+| `T08` | Pay-for-Delete Agreement Request | None (negotiation) | Debt Collector |
+| `T09` | Cease & Desist (Collector) | FDCPA § 805(c) | Debt Collector |
+| `T10` | CFPB Complaint Escalation | CFPB Authority | CFPB (consumer.gov) |
+| `T11` | § 623 Business Credit Dispute | FCRA § 623 | Business Furnisher |
+| `T12` | Experian Business File Request | FCRA / Business | Experian Business |
+
+### Template Variables
+
+Each template accepts: `user_full_name`, `user_address`, `user_ssn_last4`, `user_dob`, `bureau_name`, `item_description`, `account_number_masked`, `creditor_name`, `dispute_reason`, `supporting_document_list`, `certified_mail_number`, `date_sent`, `response_deadline_date`
+
+All generated letters encrypted before storage. SSN last 4 handled via secure input — never stored plaintext.
+
+### § 611 Dispute Reason Codes
+
+Structured reason codes rather than freeform text (better outcomes):
+- `NOT_MINE` — Account does not belong to me
+- `WRONG_BALANCE` — Balance reported is incorrect
+- `WRONG_STATUS` — Account status is incorrect (e.g., shows open when closed)
+- `WRONG_DATE` — Date of first delinquency is incorrect
+- `OBSOLETE` — Account is beyond the 7-year reporting period
+- `DUPLICATE` — Same account reported multiple times
+- `FRAUD` — Account is result of identity theft or fraud
+- `PAID_IN_FULL` — Account shows balance but was paid in full
+- `NEVER_LATE` — Late payment notation is incorrect
+- `INCLUDED_IN_BK` — Debt was discharged in bankruptcy
+
+---
+
+## Dispute Workflow Engine
+
+### Guided Dispute Flow
+
+```
+1. Import Credit Report (manual or CSV)
+    ↓
+2. Negative Item Identification
+   (auto-flagged: collections, late payments, charge-offs, judgments)
+    ↓
+3. Legal Strategy Selector
+   (bureau dispute, furnisher dispute, debt validation, or goodwill)
+    ↓
+4. Template Selector + Reason Code Assignment
+    ↓
+5. Letter Generation (user reviews, edits, approves)
+    ↓
+6. Send Instructions + Certified Mail Tracking Input
+    ↓
+7. 30/45-Day Response Timer Starts
+    ↓
+8. Bureau Response Recorded
+    ↓
+9. Outcome: Deleted / Updated / Verified (then escalate or close)
+```
+
+### Response Deadline Tracking
+
+| Action | Statutory Deadline |
+|---|---|
+| Bureau reinvestigation (§ 611) | 30 days (45 days if consumer provides additional info) |
+| Furnisher investigation (§ 623) | 30 days |
+| FDCPA debt validation response | 30 days from first contact |
+| § 605B identity theft block | 4 business days |
+
+System generates automatic reminders at: 7 days before deadline, on deadline day.
+
+### Escalation Paths
+
+1. Bureau fails to respond in 30 days → generate CFPB complaint letter (T10)
+2. Item verified but user believes it is inaccurate → generate furnisher direct dispute (T03)
+3. Debt collector continues contact after Cease & Desist → generate T09 + flag for attorney referral
+
+---
+
+## Business Credit Building System
+
+### Separation Rules (Non-Negotiable)
+
+- Business credit must be built on EIN, NOT SSN
+- Business address must be separate from personal address
+- Business bank account must be separate
+- Business phone must be separate and listable in 411
+- These rules are enforced as a checklist before the user can proceed
+
+### Business Credit Building Roadmap
+
+**Tier 0 — Foundation (Pre-Requisites)**
+- EIN obtained (IRS.gov)
+- Business entity formed (LLC or Corp — not sole prop)
+- Business checking account opened
+- Business address established (virtual office acceptable)
+- Business phone (not personal cell)
+- D-U-N-S number claimed (free at dnb.com)
+- Experian Business profile established
+- Business listed at 411
+
+**Tier 1 — Starter Trade Lines (Net-30 Vendors)**
+Vendors that report to D&B, Experian Business, and/or Equifax Business:
+- Uline (office supplies — reports to D&B)
+- Quill (office supplies — reports to D&B)
+- Grainger (industrial — reports to D&B, Experian Biz)
+- Strategic Network Solutions (SNS)
+- Crown Office Supplies
+- Summa Office Supplies
+
+**Tier 2 — Fleet / Gas Cards**
+After 3–5 Tier 1 trade lines with on-time payment history:
+- Shell Fleet Card
+- Mastercard Fleet (WEX)
+- Ramp (corporate card)
+- Divvy
+
+**Tier 3 — Business Credit Cards (No Personal Guarantee Goal)**
+After 6–12 months of solid Tier 1–2 history:
+- American Express Business (OPEN)
+- Brex (no PG for qualified businesses)
+- Ramp
+- Bank of America Business Advantage
+
+**Tier 4 — Bank Loans / LOC**
+After 12–18 months of established business credit history.
+
+### PAYDEX Score System
+
+D&B PAYDEX: 0–100 scale based on payment timing.
+- 80 = paid on time (goal minimum)
+- 100 = paid 30 days early (optimal)
+
+System tracks payment dates vs due dates and projects PAYDEX impact.
+
+---
+
+## AI Integration
+
+- Analyze credit report and identify all disputable items by statute
+- Recommend dispute strategy order (highest impact first)
+- Explain each negative item in plain English
+- Draft custom dispute language for unusual situations
+- Monitor for patterns suggesting identity theft
+- Business credit: recommend next vendor tier based on current profile strength
+
+**AI rules:** AI suggests strategy and drafts language. User reviews and approves every letter before generation. AI never submits anything autonomously.
+
+---
+
+## Document Vault Integration
+
+All generated letters + bureau responses stored in the encrypted Document Vault (Section 11):
+- Letters tagged: `credit-dispute`, `bureau`, `certified-mail`
+- Bureau responses tagged: `credit-dispute`, `response`
+- Linked to specific `DisputeCase` record
+- Full audit trail per case
+
+---
+
+## UI Components
+
+- **Credit Repair Dashboard**: active disputes, upcoming deadlines, deletion wins counter, score trend
+- **Negative Items Grid**: all negative items with status badges (active/disputed/deleted)
+- **Dispute Wizard**: step-by-step guided flow for each dispute type
+- **Letter Preview**: rendered letter with editable fields before approval
+- **Timeline Tracker**: per-case event timeline with deadline countdown
+- **Business Credit Roadmap**: tier progress tracker, vendor list with reporting status
+- **PAYDEX Tracker**: payment history vs PAYDEX projection chart
+- **Escalation Center**: cases needing action, CFPB complaint generator
+
+---
+
+## Events
+
+`DisputeCaseCreated`, `DisputeLetterGenerated`, `DisputeLetterSent`, `DisputeResponseReceived`, `NegativeItemDeleted`, `NegativeItemUpdated`, `DisputeEscalated`, `BusinessCreditTierAdvanced`, `VendorAccountAdded`
+
+---
+
+## Implementation Order
+
+1. Domain models + migrations → 2. Template engine (parameterized) → 3. Letter generation for T01–T05 → 4. Dispute workflow UI → 5. Timeline tracker → 6. Response deadline system → 7. Business credit roadmap → 8. Vendor tracking → 9. PAYDEX tracker → 10. AI integration → 11. Remaining templates (T06–T12) → 12. CFPB escalation flow
+
+---
+
+## Quality Gate
+
+- [ ] All 12 letter templates generate correctly with correct statute citations
+- [ ] 30/45-day deadlines calculated accurately
+- [ ] SSN last 4 never stored in plaintext
+- [ ] Generated letters encrypted before vault storage
+- [ ] Disclaimer present on every generated document
+- [ ] Business credit separation rules enforced (EIN ≠ SSN flow)
+- [ ] AI suggestions clearly labeled as suggestions, not legal advice
+
+---
+
+# END OF MASTER SPECIFICATION (Sections 1–38)

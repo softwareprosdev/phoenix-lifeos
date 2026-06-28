@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -19,12 +19,12 @@ import {
   Search,
   Flame,
 } from "lucide-react";
+import { useAppStore } from "@/stores/app";
 
 type NavItem = {
   id: string;
   label: string;
   icon: React.ElementType;
-  badge?: number;
   section?: string;
 };
 
@@ -45,16 +45,15 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 function Sidebar({
-  activeId,
-  onSelect,
   collapsed,
   onToggle,
 }: {
-  activeId: string;
-  onSelect: (id: string) => void;
   collapsed: boolean;
   onToggle: () => void;
 }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const activeId = location.pathname.replace("/", "") || "dashboard";
   let lastSection = "";
 
   return (
@@ -63,7 +62,6 @@ function Sidebar({
       transition={{ duration: 0.2, ease: "easeInOut" }}
       className="relative flex flex-col h-full bg-[hsl(220_15%_12%)] border-r border-[hsl(220_15%_20%)] overflow-hidden flex-shrink-0"
     >
-      {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-[hsl(220_15%_20%)]">
         <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-br from-[hsl(220_90%_56%)] to-[hsl(280_80%_60%)] flex items-center justify-center shadow-glow">
           <Flame size={16} className="text-white" />
@@ -84,7 +82,6 @@ function Sidebar({
         </AnimatePresence>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-3 px-2">
         {NAV_ITEMS.map((item) => {
           const showSection = !collapsed && item.section && item.section !== lastSection;
@@ -99,7 +96,7 @@ function Sidebar({
                 </p>
               )}
               <button
-                onClick={() => onSelect(item.id)}
+                onClick={() => navigate(`/${item.id}`)}
                 className={`
                   w-full flex items-center gap-3 px-2 py-2 rounded-lg text-sm transition-colors duration-150
                   ${isActive
@@ -132,7 +129,6 @@ function Sidebar({
         })}
       </nav>
 
-      {/* Collapse toggle */}
       <button
         onClick={onToggle}
         className="absolute top-1/2 -right-3 z-10 w-6 h-6 rounded-full bg-[hsl(220_15%_22%)] border border-[hsl(220_15%_28%)] flex items-center justify-center text-[hsl(0_0%_60%)] hover:text-white transition-colors"
@@ -144,7 +140,11 @@ function Sidebar({
   );
 }
 
-function TopBar({ activeLabel }: { activeLabel: string }) {
+function TopBar() {
+  const location = useLocation();
+  const activeLabel =
+    NAV_ITEMS.find((n) => `/${n.id}` === location.pathname)?.label || "Life Hub";
+
   return (
     <header className="h-14 flex items-center justify-between px-5 border-b border-[hsl(220_15%_18%)] bg-[hsl(220_15%_11%/0.8)] backdrop-blur-sm flex-shrink-0">
       <h1 className="text-base font-semibold text-white">{activeLabel}</h1>
@@ -167,57 +167,17 @@ function TopBar({ activeLabel }: { activeLabel: string }) {
   );
 }
 
-function ComingSoonContent({ module: mod }: { module: string }) {
-  return (
-    <motion.div
-      key={mod}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
-      className="flex flex-col items-center justify-center h-full gap-5 text-center"
-    >
-      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[hsl(220_90%_56%/0.2)] to-[hsl(280_80%_60%/0.2)] border border-[hsl(220_90%_56%/0.3)] flex items-center justify-center">
-        <Flame size={28} className="text-[hsl(220_90%_65%)]" />
-      </div>
-      <div>
-        <p className="text-lg font-semibold text-white">{mod}</p>
-        <p className="text-sm text-[hsl(0_0%_50%)] mt-1 max-w-xs">
-          This module is under active development. Check back soon.
-        </p>
-      </div>
-      <div className="flex gap-1.5">
-        {[...Array(3)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="w-1.5 h-1.5 rounded-full bg-[hsl(220_90%_56%)]"
-            animate={{ opacity: [0.3, 1, 0.3] }}
-            transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
-          />
-        ))}
-      </div>
-    </motion.div>
-  );
-}
-
-export default function App() {
-  const [activeId, setActiveId] = useState("dashboard");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
-  const activeItem = NAV_ITEMS.find((n) => n.id === activeId)!;
+export default function AppLayout() {
+  const sidebarCollapsed = useAppStore((s) => s.sidebarCollapsed);
+  const toggleSidebar = useAppStore((s) => s.toggleSidebar);
 
   return (
     <div className="flex h-screen overflow-hidden bg-[hsl(220_15%_10%)]">
-      <Sidebar
-        activeId={activeId}
-        onSelect={setActiveId}
-        collapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed((c) => !c)}
-      />
-
+      <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <TopBar activeLabel={activeItem.label} />
+        <TopBar />
         <main className="flex-1 overflow-auto">
-          <ComingSoonContent module={activeItem.label} />
+          <Outlet />
         </main>
       </div>
     </div>

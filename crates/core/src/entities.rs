@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -6,7 +7,7 @@ use crate::value_objects::{Currency, Money, Percentage};
 
 // ─── Account ─────────────────────────────────────────────────────────────────
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AccountType {
     Checking,
@@ -202,4 +203,195 @@ impl Goal {
     pub fn is_achieved(&self) -> bool {
         self.current_amount_cents >= self.target_amount_cents
     }
+}
+
+// ─── Category ──────────────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CategoryType {
+    Income,
+    Expense,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Category {
+    pub id: Uuid,
+    pub name: String,
+    pub category_type: CategoryType,
+    pub parent_id: Option<Uuid>,
+    pub created_at: DateTime<Utc>,
+}
+
+// ─── BudgetItem ────────────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BudgetItem {
+    pub id: Uuid,
+    pub budget_id: Uuid,
+    pub category_id: Option<Uuid>,
+    pub limit_cents: i64,
+    pub spent_cents: i64,
+}
+
+// ─── CreditReport ──────────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreditReport {
+    pub id: Uuid,
+    pub score: i32,
+    pub score_model: String,
+    pub bureau: String,
+    pub utilization_rate: Decimal,
+    pub on_time_rate: Decimal,
+    pub derogatory_marks: i32,
+    pub total_accounts: i32,
+    pub open_accounts: i32,
+    pub hard_inquiries_12m: i32,
+    pub report_date: DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
+}
+
+// ─── Investment ────────────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AssetType {
+    Stock,
+    Bond,
+    ETF,
+    MutualFund,
+    Crypto,
+    RealEstate,
+    Commodity,
+    Cash,
+    Other,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Investment {
+    pub id: Uuid,
+    pub account_id: Uuid,
+    pub asset_type: AssetType,
+    pub symbol: Option<String>,
+    pub name: String,
+    pub quantity: Decimal,
+    pub cost_basis_cents: i64,
+    pub current_value_cents: i64,
+    pub currency: Currency,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+// ─── Vault ─────────────────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum VaultItemType {
+    Password,
+    Note,
+    Key,
+    Secret,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VaultItem {
+    pub id: Uuid,
+    pub item_type: VaultItemType,
+    pub title: String,
+    pub encrypted_data: String,
+    pub key_version: i32,
+    pub metadata: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum VaultAccessAction {
+    View,
+    Create,
+    Update,
+    Delete,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VaultAccessLog {
+    pub id: Uuid,
+    pub item_id: Uuid,
+    pub action: VaultAccessAction,
+    pub created_at: DateTime<Utc>,
+}
+
+// ─── Document ──────────────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DocumentSource {
+    Upload,
+    Email,
+    Scan,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Document {
+    pub id: Uuid,
+    pub name: String,
+    pub file_type: String,
+    pub mime_type: Option<String>,
+    pub encrypted_path: String,
+    pub ocr_text_encrypted: Option<String>,
+    pub extracted_metadata: String,
+    pub tags: Vec<String>,
+    pub source: DocumentSource,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+// ─── CRM ───────────────────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Contact {
+    pub id: Uuid,
+    pub name: String,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub organization: Option<String>,
+    pub notes: Option<String>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum InteractionType {
+    Call,
+    Email,
+    Meeting,
+    Note,
+    Other,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ContactInteraction {
+    pub id: Uuid,
+    pub contact_id: Uuid,
+    pub interaction_type: InteractionType,
+    pub subject: Option<String>,
+    pub notes: Option<String>,
+    pub date: DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
+}
+
+// ─── Event ─────────────────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Event {
+    pub id: Uuid,
+    pub event_type: String,
+    pub entity_type: Option<String>,
+    pub entity_id: Option<String>,
+    pub metadata: Option<String>,
+    pub created_at: DateTime<Utc>,
 }

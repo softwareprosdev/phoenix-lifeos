@@ -1,5 +1,6 @@
 pub mod entities;
 pub mod errors;
+pub mod event_bus;
 pub mod value_objects;
 
 pub use errors::DomainError;

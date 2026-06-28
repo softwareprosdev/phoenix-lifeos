@@ -11,4 +11,10 @@ chrono = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 anyhow = { workspace = true }
+async-trait = "0.1"
+rust_decimal = { workspace = true }
 phoenix-core = { path = "../core" }
+phoenix-db = { path = "../db" }
+
+[dev-dependencies]
+sqlx = { workspace = true }

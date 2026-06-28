@@ -24,9 +24,23 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+rust_decimal = { workspace = true }
 
 # Internal crates
 phoenix-core = { path = "../crates/core" }
 phoenix-db = { path = "../crates/db" }
 phoenix-security = { path = "../crates/security" }
 phoenix-settings = { path = "../crates/settings" }
+phoenix-finance = { path = "../crates/finance" }
+phoenix-budgeting = { path = "../crates/budgeting" }
+phoenix-debt = { path = "../crates/debt" }
+phoenix-credit = { path = "../crates/credit" }
+phoenix-investments = { path = "../crates/investments" }
+phoenix-vault = { path = "../crates/vault" }
+phoenix-crm = { path = "../crates/crm" }
+phoenix-reports = { path = "../crates/reports" }
+phoenix-sync = { path = "../crates/sync" }
+phoenix-automation = { path = "../crates/automation" }
+phoenix-shared = { path = "../crates/shared" }
