@@ -1,0 +1,17 @@
+[package]
+name = "phoenix-finance"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { workspace = true }
+thiserror = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+rust_decimal = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+anyhow = { workspace = true }
+phoenix-core = { path = "../core" }
+phoenix-db = { path = "../db" }
+async-trait = "0.1"

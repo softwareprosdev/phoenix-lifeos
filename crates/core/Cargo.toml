@@ -1,0 +1,13 @@
+[package]
+name = "phoenix-core"
+version = "0.1.0"
+edition = "2021"
+description = "Phoenix LifeOS — Domain layer: entities, value objects, business rules"
+
+[dependencies]
+serde = { workspace = true }
+thiserror = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+rust_decimal = { workspace = true }
+zeroize = { workspace = true }
