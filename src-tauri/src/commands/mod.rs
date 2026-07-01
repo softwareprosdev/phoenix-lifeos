@@ -2,6 +2,7 @@ pub mod budget;
 pub mod credit;
 pub mod crm;
 pub mod debt;
+pub mod documents;
 pub mod finance;
 pub mod goals;
 pub mod investments;

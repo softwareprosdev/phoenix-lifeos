@@ -252,6 +252,148 @@ pub struct CreditReport {
     pub created_at: DateTime<Utc>,
 }
 
+// ─── Credit Repair ──────────────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreditAccount {
+    pub id: Uuid,
+    pub name: String,
+    pub issuer: String,
+    pub account_type: String,
+    pub credit_limit_cents: i64,
+    pub balance_cents: i64,
+    pub apr: String,
+    pub payment_status: String,
+    pub opened_date: Option<DateTime<Utc>>,
+    pub closed_date: Option<DateTime<Utc>>,
+    pub is_active: bool,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreditInquiry {
+    pub id: Uuid,
+    pub bureau: String,
+    pub creditor_name: String,
+    pub inquiry_type: String,
+    pub inquiry_date: DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreditDerogatory {
+    pub id: Uuid,
+    pub creditor_name: String,
+    pub account_number_encrypted: Option<String>,
+    pub item_type: String,
+    pub amount_cents: i64,
+    pub original_amount_cents: i64,
+    pub status: String,
+    pub opened_date: Option<DateTime<Utc>>,
+    pub expected_removal_date: Option<DateTime<Utc>>,
+    pub is_disputed: bool,
+    pub bureau: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DisputeLetterTemplate {
+    pub id: String,
+    pub template_code: String,
+    pub name: String,
+    pub description: String,
+    pub legal_basis: Option<String>,
+    pub recipient_type: String,
+    pub body_template: String,
+    pub variable_schema: Vec<String>,
+    pub is_active: bool,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NegativeItem {
+    pub id: Uuid,
+    pub creditor_name: String,
+    pub item_type: String,
+    pub bureau: String,
+    pub account_number_encrypted: Option<String>,
+    pub amount_cents: i64,
+    pub expected_removal_date: Option<DateTime<Utc>>,
+    pub is_disputed: bool,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DisputeCase {
+    pub id: Uuid,
+    pub negative_item_id: Option<Uuid>,
+    pub dispute_type: String,
+    pub status: String,
+    pub status_basis: Option<String>,
+    pub bureau: String,
+    pub statute_basis: Option<String>,
+    pub notes: Option<String>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DisputeLetter {
+    pub id: Uuid,
+    pub dispute_case_id: Uuid,
+    pub template_id: Option<String>,
+    pub recipient_type: String,
+    pub recipient_name: String,
+    pub recipient_address: Option<String>,
+    pub generated_content_encrypted: Option<String>,
+    pub tracking_number: Option<String>,
+    pub sent_date: Option<DateTime<Utc>>,
+    pub response_received_date: Option<DateTime<Utc>>,
+    pub response_summary: Option<String>,
+    pub status: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DisputeTimelineEntry {
+    pub id: Uuid,
+    pub dispute_case_id: Uuid,
+    pub event_type: String,
+    pub description: String,
+    pub metadata: Option<String>,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BusinessCreditProfile {
+    pub id: Uuid,
+    pub business_name: String,
+    pub ein_encrypted: Option<String>,
+    pub duns_number: Option<String>,
+    pub paydex_score: Option<i32>,
+    pub business_credit_score: Option<i32>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VendorCreditAccount {
+    pub id: Uuid,
+    pub business_credit_profile_id: Uuid,
+    pub vendor_name: String,
+    pub account_type: String,
+    pub credit_limit_cents: i64,
+    pub payment_status: String,
+    pub reports_to_dnb: bool,
+    pub reports_to_experian: bool,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
 // ─── Investment ────────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

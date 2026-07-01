@@ -1,18 +1,81 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useCreditScore, useCreditAccounts } from "../hooks/useCreditData";
 import { ScoreGauge } from "../components/ScoreGauge";
 import { CardSkeleton } from "../../../components/ui/Skeleton";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
-import { CreditCard, PieChart, Clock, Search } from "lucide-react";
-import { formatCurrency } from "../../../lib/utils";
+import { CreditCard, PieChart, Clock, Search, Shield } from "lucide-react";
+import { formatCurrency, cn } from "../../../lib/utils";
+import CreditRepairPage from "./CreditRepairPage";
 
 export default function CreditPage() {
+  const [activeTab, setActiveTab] = useState<"monitoring" | "repair">("monitoring");
   const { data: scoreData, isLoading: scoreLoading } = useCreditScore();
   const { data: accounts, isLoading: accountsLoading } = useCreditAccounts();
+
+  const tabs = [
+    { id: "monitoring" as const, label: "Monitoring", icon: Search },
+    { id: "repair" as const, label: "Repair", icon: Shield },
+  ];
+
+  if (activeTab === "repair") {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.2 }}
+        className="h-full overflow-auto"
+      >
+        <div className="p-4 pb-0">
+          <div className="flex items-center gap-1 rounded-lg bg-[hsl(220_15%_14%/0.5)] p-1 border border-[hsl(220_15%_22%/0.4)] w-fit">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded px-3 py-1.5 text-xs font-medium transition-colors",
+                    activeTab === tab.id
+                      ? "bg-[hsl(220_90%_56%/0.15)] text-[hsl(220_90%_70%)]"
+                      : "text-[hsl(0_0%_55%)] hover:text-white hover:bg-[hsl(220_15%_18%/0.5)]",
+                  )}
+                >
+                  <Icon size={14} />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <CreditRepairPage />
+      </motion.div>
+    );
+  }
 
   if (scoreLoading || accountsLoading) {
     return (
       <div className="p-6 space-y-4">
+        <div className="flex items-center gap-1 rounded-lg bg-[hsl(220_15%_14%/0.5)] p-1 border border-[hsl(220_15%_22%/0.4)] w-fit mb-4">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "inline-flex items-center gap-2 rounded px-3 py-1.5 text-xs font-medium transition-colors",
+                  activeTab === tab.id
+                    ? "bg-[hsl(220_90%_56%/0.15)] text-[hsl(220_90%_70%)]"
+                    : "text-[hsl(0_0%_55%)] hover:text-white hover:bg-[hsl(220_15%_18%/0.5)]",
+                )}
+              >
+                <Icon size={14} />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
         <div className="grid grid-cols-2 gap-4">
           {Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}
         </div>
@@ -45,6 +108,27 @@ export default function CreditPage() {
       transition={{ duration: 0.2 }}
       className="p-6 h-full overflow-auto"
     >
+      <div className="flex items-center gap-1 rounded-lg bg-[hsl(220_15%_14%/0.5)] p-1 border border-[hsl(220_15%_22%/0.4)] w-fit mb-4">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                "inline-flex items-center gap-2 rounded px-3 py-1.5 text-xs font-medium transition-colors",
+                activeTab === tab.id
+                  ? "bg-[hsl(220_90%_56%/0.15)] text-[hsl(220_90%_70%)]"
+                  : "text-[hsl(0_0%_55%)] hover:text-white hover:bg-[hsl(220_15%_18%/0.5)]",
+              )}
+            >
+              <Icon size={14} />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
       <h2 className="text-sm font-semibold text-white mb-4">Credit Monitoring</h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
@@ -128,8 +212,8 @@ export default function CreditPage() {
             key={account.id}
             className="rounded-lg p-4 bg-[hsl(220_15%_14%/0.7)] border border-[hsl(220_15%_22%/0.6)]"
           >
-            <p className="text-sm font-semibold text-white">{account.name}</p>
-            <p className="text-[10px] text-[hsl(0_0%_45%)]">{account.issuer}</p>
+            <p className="text-sm font-semibold text-white">{account.creditor_name}</p>
+            <p className="text-[10px] text-[hsl(0_0%_45%)]">{account.account_type}</p>
             <div className="flex items-center justify-between mt-2">
               <span className="text-xs text-[hsl(0_0%_50%)]">Balance</span>
               <span className={`text-sm font-semibold ${account.balance_cents > 0 ? "text-white" : "text-[hsl(142_72%_45%)]"}`}>
@@ -142,7 +226,7 @@ export default function CreditPage() {
             </div>
             <div className="flex items-center justify-between mt-0.5">
               <span className="text-xs text-[hsl(0_0%_50%)]">APR</span>
-              <span className="text-xs text-[hsl(0_84%_60%)]">{account.apr.toFixed(1)}%</span>
+              <span className="text-xs text-[hsl(0_84%_60%)]">{account.payment_status}</span>
             </div>
           </div>
         ))}

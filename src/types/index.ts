@@ -30,6 +30,18 @@ export type {
 export type {
   CreditReport,
   ScoreHistoryPoint,
+  CreditAccount,
+  CreditInquiry,
+  CreditDerogatory,
+  DisputeLetterTemplate,
+  NegativeItem,
+  DisputeCase,
+  DisputeLetter,
+  DisputeTimelineEntry,
+  BusinessCreditProfile,
+  VendorCreditAccount,
+  DisputeCaseDetail,
+  GenerateLetterInput,
 } from "./credit";
 
 export type {

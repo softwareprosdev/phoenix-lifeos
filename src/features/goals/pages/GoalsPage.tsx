@@ -65,6 +65,9 @@ function AddGoalModal({ open, onClose }: { open: boolean; onClose: () => void })
   );
 }
 
+const GOAL_COLORS = ["hsl(220, 90%, 56%)", "hsl(142, 72%, 45%)", "hsl(38, 92%, 50%)", "hsl(0, 84%, 60%)", "hsl(280, 80%, 60%)", "hsl(196, 85%, 50%)"];
+const goalColor = (id: string) => GOAL_COLORS[id.charCodeAt(0) % GOAL_COLORS.length];
+
 export default function GoalsPage() {
   const { data: goals, isLoading } = useGoals();
   const [showAdd, setShowAdd] = useState(false);
@@ -97,7 +100,8 @@ export default function GoalsPage() {
         {goals?.map((goal) => {
           const progress = goal.target_amount_cents > 0 ? (goal.current_amount_cents / goal.target_amount_cents) * 100 : 0;
           const remaining = goal.target_amount_cents - goal.current_amount_cents;
-          const daysLeft = Math.max(0, Math.ceil((new Date(goal.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+          const deadlineDate = goal.deadline ? new Date(goal.deadline) : null;
+          const daysLeft = deadlineDate ? Math.max(0, Math.ceil((deadlineDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0;
           const monthlySuggested = daysLeft > 0 ? remaining / (daysLeft / 30) : remaining;
 
           return (
@@ -109,12 +113,12 @@ export default function GoalsPage() {
               className="rounded-lg p-4 bg-[hsl(220_15%_14%/0.7)] backdrop-blur-sm border border-[hsl(220_15%_22%/0.6)]"
             >
               <div className="flex items-center gap-2.5 mb-3">
-                <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${goal.color}20` }}>
-                  <Target size={16} style={{ color: goal.color }} />
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${goalColor(goal.id)}20` }}>
+                  <Target size={16} style={{ color: goalColor(goal.id) }} />
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-white truncate">{goal.name}</p>
-                  <p className="text-[10px] text-[hsl(0_0%_45%)] capitalize">{goal.category}</p>
+                  <p className="text-[10px] text-[hsl(0_0%_45%)] capitalize">{goal.goal_type.replace(/_/g, " ")}</p>
                 </div>
               </div>
 
@@ -126,7 +130,7 @@ export default function GoalsPage() {
                     <circle
                       cx="18" cy="18" r="15.5"
                       fill="none"
-                      stroke={goal.color}
+                      stroke={goalColor(goal.id)}
                       strokeWidth="3"
                       strokeDasharray={`${Math.min(progress, 100)} ${100 - Math.min(progress, 100)}`}
                       strokeLinecap="round"

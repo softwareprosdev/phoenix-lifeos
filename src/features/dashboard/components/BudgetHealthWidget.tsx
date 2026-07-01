@@ -7,8 +7,8 @@ export function BudgetHealthWidget() {
 
   if (isLoading) return <Card className="h-full"><Skeleton className="h-full" /></Card>;
 
-  const totalSpent = data?.reduce((s, b) => s + b.spent, 0) ?? 0;
-  const totalLimit = data?.reduce((s, b) => s + b.limit, 0) ?? 0;
+  const totalSpent = data?.reduce((s, b) => s + b.spent_cents, 0) ?? 0;
+  const totalLimit = data?.reduce((s, b) => s + b.limit_cents, 0) ?? 0;
   const percentage = totalLimit > 0 ? (totalSpent / totalLimit) * 100 : 0;
 
   const getColor = (pct: number) => {
@@ -30,11 +30,11 @@ export function BudgetHealthWidget() {
         </div>
         <div className="flex-1 min-w-0 space-y-1.5">
           {data?.slice(0, 3).map((b) => {
-            const pct = b.limit > 0 ? (b.spent / b.limit) * 100 : 0;
+            const pct = b.limit_cents > 0 ? (b.spent_cents / b.limit_cents) * 100 : 0;
             return (
-              <div key={b.category}>
+              <div key={b.id ?? b.category_id}>
                 <div className="flex justify-between text-[11px]">
-                  <span className="text-[hsl(0_0%_60%)]">{b.category}</span>
+                  <span className="text-[hsl(0_0%_60%)]">{b.category_id ?? "Unknown"}</span>
                   <span className="text-white font-medium">{Math.round(pct)}%</span>
                 </div>
                 <div className="h-1 rounded-full bg-[hsl(220_15%_22%)] overflow-hidden">

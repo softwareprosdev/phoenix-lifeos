@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import toast from "react-hot-toast";
-import { Plus, Search, Mail, Phone, Building2, Star } from "lucide-react";
+import { Plus, Search, Mail, Phone, Building2 } from "lucide-react";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -72,8 +72,8 @@ export default function ContactsPage() {
     return contacts.filter(
       (c) =>
         c.name.toLowerCase().includes(q) ||
-        c.organization.toLowerCase().includes(q) ||
-        c.role.toLowerCase().includes(q),
+        c.organization?.toLowerCase().includes(q) ||
+        c.email?.toLowerCase().includes(q),
     );
   }, [contacts, search]);
 
@@ -130,9 +130,8 @@ export default function ContactsPage() {
                 <div>
                   <div className="flex items-center gap-1">
                     <p className="text-sm font-semibold text-white">{contact.name}</p>
-                    {contact.is_favorite && <Star size={12} className="text-[hsl(38_92%_50%)]" />}
                   </div>
-                  <p className="text-[10px] text-[hsl(0_0%_45%)]">{contact.role}</p>
+                  <p className="text-[10px] text-[hsl(0_0%_45%)]">{contact.organization}</p>
                 </div>
               </div>
             </div>

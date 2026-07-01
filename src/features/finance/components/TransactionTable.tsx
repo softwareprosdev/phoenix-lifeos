@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import type { Transaction } from "../types";
+import type { Transaction } from "@/types";
 import { formatCurrency, formatDate } from "../../../lib/utils";
 import { ArrowUpRight, ArrowDownRight, Trash2 } from "lucide-react";
 
@@ -17,8 +17,8 @@ export function TransactionTable({ transactions, onDelete }: TransactionTablePro
     );
   }
 
-  const totalIncome = transactions.filter((t) => t.type === "income").reduce((s, t) => s + t.amount_cents, 0);
-  const totalExpenses = transactions.filter((t) => t.type === "expense").reduce((s, t) => s + t.amount_cents, 0);
+  const totalIncome = transactions.filter((t) => t.transaction_type === "income").reduce((s, t) => s + t.amount_cents, 0);
+  const totalExpenses = transactions.filter((t) => t.transaction_type === "expense").reduce((s, t) => s + t.amount_cents, 0);
 
   return (
     <div>
@@ -46,7 +46,7 @@ export function TransactionTable({ transactions, onDelete }: TransactionTablePro
               <th className="text-left font-medium py-2 pr-2">Date</th>
               <th className="text-left font-medium py-2 pr-2">Description</th>
               <th className="text-left font-medium py-2 pr-2 hidden sm:table-cell">Merchant</th>
-              <th className="text-left font-medium py-2 pr-2 hidden md:table-cell">Category</th>
+              <th className="text-left font-medium py-2 pr-2 hidden md:table-cell">Type</th>
               <th className="text-right font-medium py-2 pl-2">Amount</th>
               <th className="w-8 py-2" />
             </tr>
@@ -61,17 +61,17 @@ export function TransactionTable({ transactions, onDelete }: TransactionTablePro
                 className="border-b border-[hsl(220_15%_16%)] hover:bg-[hsl(220_15%_16%/0.4)] transition-colors"
               >
                 <td className="py-2.5 pr-2 text-[hsl(0_0%_50%)] text-xs whitespace-nowrap">{formatDate(t.date)}</td>
-                <td className="py-2.5 pr-2 text-white font-medium">{t.description}</td>
-                <td className="py-2.5 pr-2 text-[hsl(0_0%_50%)] text-xs hidden sm:table-cell">{t.merchant}</td>
+                <td className="py-2.5 pr-2 text-white font-medium">{t.description || "—"}</td>
+                <td className="py-2.5 pr-2 text-[hsl(0_0%_50%)] text-xs hidden sm:table-cell">{t.merchant || "—"}</td>
                 <td className="py-2.5 pr-2 hidden md:table-cell">
                   <span className="px-1.5 py-0.5 rounded text-[10px] bg-[hsl(220_15%_20%)] text-[hsl(0_0%_55%)]">
-                    {t.category}
+                    {t.transaction_type}
                   </span>
                 </td>
-                <td className={`py-2.5 pl-2 text-right font-medium whitespace-nowrap ${t.type === "income" ? "text-[hsl(142_72%_45%)]" : "text-white"}`}>
+                <td className={`py-2.5 pl-2 text-right font-medium whitespace-nowrap ${t.transaction_type === "income" ? "text-[hsl(142_72%_45%)]" : "text-white"}`}>
                   <div className="flex items-center justify-end gap-1">
-                    {t.type === "income" ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-                    {t.type === "income" ? "+" : ""}{formatCurrency(Math.abs(t.amount_cents))}
+                    {t.transaction_type === "income" ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+                    {t.transaction_type === "income" ? "+" : ""}{formatCurrency(Math.abs(t.amount_cents))}
                   </div>
                 </td>
                 <td className="py-2.5 pl-2">

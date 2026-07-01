@@ -15,19 +15,19 @@ export function DebtOverviewWidget() {
         <p className="text-xs font-medium text-[hsl(0_0%_55%)] uppercase tracking-wider">Debt Overview</p>
         <TrendingDown size={14} className="text-[hsl(0_84%_60%)]" />
       </div>
-      <p className="text-2xl font-bold text-white">{formatCurrency(data?.totalDebt ?? 0)}</p>
+      <p className="text-2xl font-bold text-white">{formatCurrency(data?.total_balance ?? 0)}</p>
       <div className="grid grid-cols-3 gap-2 mt-3">
         <div>
           <p className="text-[10px] text-[hsl(0_0%_50%)]">Accounts</p>
-          <p className="text-sm font-semibold text-white">{data?.debtCount}</p>
+          <p className="text-sm font-semibold text-white">{data?.debt_count}</p>
         </div>
         <div>
           <p className="text-[10px] text-[hsl(0_0%_50%)]">Avg APR</p>
-          <p className="text-sm font-semibold text-[hsl(0_84%_60%)]">{data?.avgApr.toFixed(1)}%</p>
+          <p className="text-sm font-semibold text-[hsl(0_84%_60%)]">{(data?.avg_apr ?? 0).toFixed(1)}%</p>
         </div>
         <div>
           <p className="text-[10px] text-[hsl(0_0%_50%)]">Min Payment</p>
-          <p className="text-sm font-semibold text-white">{formatCurrency(data?.totalMinPayments ?? 0)}</p>
+          <p className="text-sm font-semibold text-white">{formatCurrency(data?.total_min_payments ?? 0)}</p>
         </div>
       </div>
     </Card>

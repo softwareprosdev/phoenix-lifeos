@@ -5,12 +5,13 @@ import { Modal } from "../../../components/ui/Modal";
 import { Input } from "../../../components/ui/Input";
 import { Select } from "../../../components/ui/Select";
 import { Button } from "../../../components/ui/Button";
+import { useCreateAccount } from "@/hooks";
 import toast from "react-hot-toast";
 
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
-  account_type: z.enum(["checking", "savings", "credit", "investment", "loan", "cash"]),
-  institution: z.string().min(1, "Institution is required"),
+  account_type: z.enum(["checking", "savings", "credit", "investment", "loan", "cash", "business"]),
+  institution: z.string().optional(),
   balance_cents: z.coerce.number().int("Balance must be a whole number"),
   currency: z.string().default("USD"),
 });
@@ -23,16 +24,21 @@ interface AddAccountModalProps {
 }
 
 export function AddAccountModal({ open, onClose }: AddAccountModalProps) {
+  const createAccount = useCreateAccount();
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { currency: "USD" },
+    defaultValues: { currency: "USD", balance_cents: 0 },
   });
 
-  const onSubmit = (data: FormData) => {
-    console.log("Add account:", data);
-    toast.success("Account added successfully");
-    reset();
-    onClose();
+  const onSubmit = async (data: FormData) => {
+    try {
+      await createAccount.mutateAsync(data);
+      toast.success("Account added successfully");
+      reset();
+      onClose();
+    } catch {
+      toast.error("Failed to add account");
+    }
   };
 
   return (
@@ -50,6 +56,7 @@ export function AddAccountModal({ open, onClose }: AddAccountModalProps) {
             { value: "investment", label: "Investment" },
             { value: "loan", label: "Loan" },
             { value: "cash", label: "Cash" },
+            { value: "business", label: "Business" },
           ]}
           {...register("account_type")}
         />
@@ -57,7 +64,7 @@ export function AddAccountModal({ open, onClose }: AddAccountModalProps) {
         <Input id="balance_cents" label="Balance (cents)" type="number" error={errors.balance_cents?.message} {...register("balance_cents")} />
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button type="submit">Add Account</Button>
+          <Button type="submit" isLoading={createAccount.isPending}>Add Account</Button>
         </div>
       </form>
     </Modal>

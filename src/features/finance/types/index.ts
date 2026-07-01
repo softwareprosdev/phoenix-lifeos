@@ -1,8 +1,8 @@
 export interface Account {
   id: string;
   name: string;
-  account_type: "checking" | "savings" | "credit" | "investment" | "loan" | "cash";
-  institution: string;
+  account_type: "checking" | "savings" | "credit" | "investment" | "loan" | "cash" | "business";
+  institution?: string;
   balance_cents: number;
   currency: string;
   is_active: boolean;
@@ -13,14 +13,18 @@ export interface Account {
 export interface Transaction {
   id: string;
   account_id: string;
-  date: string;
-  description: string;
-  merchant: string;
-  category: string;
   amount_cents: number;
-  type: "income" | "expense";
+  currency: string;
+  transaction_type: "income" | "expense" | "transfer";
+  category_id?: string;
+  merchant?: string;
+  description?: string;
+  date: string;
+  tags: string[];
   is_recurring: boolean;
   created_at: string;
+  updated_at: string;
+  deleted_at?: string;
 }
 
 export interface TransactionFilters {

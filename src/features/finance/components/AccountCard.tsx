@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import type { Account } from "../types";
+import type { Account } from "@/types";
 import { formatCurrency } from "../../../lib/utils";
 import { Badge } from "../../../components/ui/Badge";
 import { Wallet, PiggyBank, CreditCard, TrendingUp, HandCoins, DollarSign } from "lucide-react";

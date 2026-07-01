@@ -261,3 +261,19 @@ pub async fn get_debt_summary(state: State<'_, AppState>) -> Result<DebtSummaryR
         currency,
     })
 }
+
+#[tauri::command]
+pub async fn delete_debt(state: State<'_, AppState>, id: String) -> Result<(), String> {
+    let uuid = Uuid::parse_str(&id).map_err(|e| format!("invalid id: {e}"))?;
+    let repo = SqlDebtRepository::new(state.pool.clone());
+    repo.delete(uuid).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn list_debts_by_type(
+    state: State<'_, AppState>,
+    debt_type: DebtType,
+) -> Result<Vec<Debt>, String> {
+    let repo = SqlDebtRepository::new(state.pool.clone());
+    repo.list_by_type(debt_type).await.map_err(|e| e.to_string())
+}

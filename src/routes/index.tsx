@@ -7,6 +7,7 @@ const FinancePage = lazy(() => import("@/features/finance/pages/FinancePage"));
 const BudgetPage = lazy(() => import("@/features/budget/pages/BudgetPage"));
 const DebtPage = lazy(() => import("@/features/debt/pages/DebtPage"));
 const CreditPage = lazy(() => import("@/features/credit/pages/CreditPage"));
+const CreditRepairPage = lazy(() => import("@/features/credit/pages/CreditRepairPage"));
 const InvestmentsPage = lazy(() => import("@/features/investments/pages/InvestmentsPage"));
 const GoalsPage = lazy(() => import("@/features/goals/pages/GoalsPage"));
 const VaultPage = lazy(() => import("@/features/vault/pages/VaultPage"));
@@ -79,6 +80,14 @@ export const router = createBrowserRouter([
         element: (
           <SuspenseWrapper>
             <CreditPage />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: "credit/repair",
+        element: (
+          <SuspenseWrapper>
+            <CreditRepairPage />
           </SuspenseWrapper>
         ),
       },

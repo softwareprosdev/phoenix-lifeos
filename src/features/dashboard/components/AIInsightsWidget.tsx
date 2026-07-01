@@ -3,13 +3,19 @@ import { Card } from "../../../components/ui/Card";
 import { Skeleton } from "../../../components/ui/Skeleton";
 import { Lightbulb, AlertTriangle, Award } from "lucide-react";
 
-const iconMap = {
+interface Insight {
+  id: string;
+  type: "tip" | "alert" | "achievement";
+  message: string;
+}
+
+const iconMap: Record<string, React.ElementType> = {
   tip: Lightbulb,
   alert: AlertTriangle,
   achievement: Award,
 };
 
-const colorMap = {
+const colorMap: Record<string, string> = {
   tip: "hsl(220, 90%, 56%)",
   alert: "hsl(38, 92%, 50%)",
   achievement: "hsl(142, 72%, 45%)",
@@ -20,6 +26,8 @@ export function AIInsightsWidget() {
 
   if (isLoading) return <Card className="h-full"><Skeleton className="h-full" /></Card>;
 
+  const insights = (data ?? []) as Insight[];
+
   return (
     <Card className="h-full">
       <div className="flex items-center justify-between mb-3">
@@ -27,9 +35,9 @@ export function AIInsightsWidget() {
         <Lightbulb size={14} className="text-[hsl(38_92%_50%)]" />
       </div>
       <div className="space-y-2">
-        {data?.map((insight) => {
-          const Icon = iconMap[insight.type];
-          const color = colorMap[insight.type];
+        {insights.map((insight) => {
+          const Icon = iconMap[insight.type] ?? Lightbulb;
+          const color = colorMap[insight.type] ?? "hsl(220, 90%, 56%)";
           return (
             <div key={insight.id} className="flex gap-2.5 p-2 rounded-lg bg-[hsl(220_15%_16%/0.5)]">
               <div className="mt-0.5 flex-shrink-0">

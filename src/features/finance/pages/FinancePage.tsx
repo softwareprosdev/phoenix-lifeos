@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { useAccounts, useTransactions } from "../hooks/useFinanceData";
+import { useAccounts, useTransactions } from "@/hooks";
 import { AccountCard } from "../components/AccountCard";
 import { TransactionTable } from "../components/TransactionTable";
 import { TransactionFilters } from "../components/TransactionFilters";
@@ -11,6 +11,7 @@ import { Button } from "../../../components/ui/Button";
 import { Plus, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
 import type { TransactionFilters as TF } from "../types";
+import type { Transaction } from "@/types";
 
 export default function FinancePage() {
   const { data: accounts, isLoading: accountsLoading } = useAccounts();
@@ -21,16 +22,16 @@ export default function FinancePage() {
   const [filters, setFilters] = useState<TF>({ dateFrom: "", dateTo: "", category: "", type: "", search: "" });
 
   const categories = useMemo(() => {
-    const cats = new Set(transactions?.map((t) => t.category) ?? []);
+    const cats = new Set((transactions ?? []).map((t: Transaction) => t.category_id ?? "uncategorized"));
     return Array.from(cats);
   }, [transactions]);
 
   const filteredTransactions = useMemo(() => {
     if (!transactions) return [];
     return transactions.filter((t) => {
-      if (filters.type && t.type !== filters.type) return false;
-      if (filters.category && t.category !== filters.category) return false;
-      if (filters.search && !t.description.toLowerCase().includes(filters.search.toLowerCase()) && !t.merchant.toLowerCase().includes(filters.search.toLowerCase())) return false;
+      if (filters.type && t.transaction_type !== filters.type) return false;
+      if (filters.category && t.category_id !== filters.category && (t.category_id ?? "uncategorized") !== filters.category) return false;
+      if (filters.search && !(t.description ?? "").toLowerCase().includes(filters.search.toLowerCase()) && !(t.merchant ?? "").toLowerCase().includes(filters.search.toLowerCase())) return false;
       if (filters.dateFrom && t.date < filters.dateFrom) return false;
       if (filters.dateTo && t.date > filters.dateTo) return false;
       return true;
@@ -54,7 +55,6 @@ export default function FinancePage() {
       transition={{ duration: 0.2 }}
       className="p-6 h-full overflow-auto"
     >
-      {/* Accounts Section */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-semibold text-white">Accounts</h2>
         <Button size="sm" onClick={() => setShowAddAccount(true)}>
@@ -72,7 +72,6 @@ export default function FinancePage() {
         ))}
       </div>
 
-      {/* Transactions Section */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <h2 className="text-sm font-semibold text-white">Transactions</h2>
@@ -100,7 +99,7 @@ export default function FinancePage() {
             ))}
           </div>
         ) : (
-          <TransactionTable transactions={filteredTransactions} onDelete={() => toast.success("Transaction deleted")} />
+          <TransactionTable transactions={filteredTransactions ?? []} onDelete={() => toast.success("Transaction deleted")} />
         )}
       </div>
 

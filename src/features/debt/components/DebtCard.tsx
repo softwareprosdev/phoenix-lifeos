@@ -8,8 +8,8 @@ interface DebtCardProps {
 }
 
 export function DebtCard({ debt }: DebtCardProps) {
-  const payoffPct = debt.original_balance_cents > 0
-    ? ((debt.original_balance_cents - debt.balance_cents) / debt.original_balance_cents) * 100
+  const payoffPct = debt.principal_cents > 0
+    ? ((debt.principal_cents - debt.remaining_balance_cents) / debt.principal_cents) * 100
     : 0;
 
   return (
@@ -27,13 +27,13 @@ export function DebtCard({ debt }: DebtCardProps) {
           </div>
           <p className="text-[10px] text-[hsl(0_0%_45%)] mt-0.5">{debt.creditor}</p>
         </div>
-        <span className="text-xs font-semibold text-[hsl(0_84%_60%)]">{debt.apr.toFixed(1)}% APR</span>
+        <span className="text-xs font-semibold text-[hsl(0_84%_60%)]">{Number(debt.interest_rate).toFixed(1)}% APR</span>
       </div>
 
       <div className="flex items-end justify-between mb-3">
         <div>
-          <p className="text-lg font-bold text-white">{formatCurrency(debt.balance_cents)}</p>
-          <p className="text-[10px] text-[hsl(0_0%_45%)]">Min: {formatCurrency(debt.min_payment_cents)}/mo</p>
+          <p className="text-lg font-bold text-white">{formatCurrency(debt.remaining_balance_cents)}</p>
+          <p className="text-[10px] text-[hsl(0_0%_45%)]">Min: {formatCurrency(debt.minimum_payment_cents)}/mo</p>
         </div>
         <p className="text-[11px] text-[hsl(0_0%_50%)]">
           {payoffPct.toFixed(0)}% paid off

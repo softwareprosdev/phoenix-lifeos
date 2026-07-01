@@ -135,6 +135,38 @@ pub async fn update_goal(
 }
 
 #[tauri::command]
+pub async fn delete_goal(state: State<'_, AppState>, id: String) -> Result<(), String> {
+    let uuid = Uuid::parse_str(&id).map_err(|e| format!("invalid id: {e}"))?;
+    let repo = SqlGoalRepository::new(state.pool.clone());
+    repo.delete(uuid).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn list_goals_by_type(
+    state: State<'_, AppState>,
+    goal_type: GoalType,
+) -> Result<Vec<Goal>, String> {
+    let repo = SqlGoalRepository::new(state.pool.clone());
+    repo.list_by_type(goal_type).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn list_active_goals(state: State<'_, AppState>) -> Result<Vec<Goal>, String> {
+    let repo = SqlGoalRepository::new(state.pool.clone());
+    repo.list_active().await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn list_goals_by_account(
+    state: State<'_, AppState>,
+    account_id: String,
+) -> Result<Vec<Goal>, String> {
+    let uuid = Uuid::parse_str(&account_id).map_err(|e| format!("invalid account_id: {e}"))?;
+    let repo = SqlGoalRepository::new(state.pool.clone());
+    repo.list_by_account(uuid).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub async fn get_goal_progress(
     state: State<'_, AppState>,
     id: String,

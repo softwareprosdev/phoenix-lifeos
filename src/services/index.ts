@@ -8,6 +8,9 @@ import { vaultService } from "./vault";
 import { crmService } from "./crm";
 import { reportService } from "./reports";
 import { settingsService } from "./settings";
+import { maintenanceService } from "./maintenance";
+import { businessService } from "./business";
+import { dashboardService } from "./dashboard";
 
 export { financeService };
 export { budgetService };
@@ -19,6 +22,9 @@ export { vaultService };
 export { crmService };
 export { reportService };
 export { settingsService };
+export { maintenanceService };
+export { businessService };
+export { dashboardService };
 
 export const services = {
   finance: financeService,
@@ -31,4 +37,7 @@ export const services = {
   crm: crmService,
   reports: reportService,
   settings: settingsService,
+  maintenance: maintenanceService,
+  business: businessService,
+  dashboard: dashboardService,
 } as const;

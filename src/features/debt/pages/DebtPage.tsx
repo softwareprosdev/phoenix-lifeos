@@ -25,9 +25,9 @@ export default function DebtPage() {
     );
   }
 
-  const totalBalance = debts?.reduce((s, d) => s + d.balance_cents, 0) ?? 0;
-  const totalMinPayments = debts?.reduce((s, d) => s + d.min_payment_cents, 0) ?? 0;
-  const avgApr = debts && debts.length > 0 ? debts.reduce((s, d) => s + d.apr, 0) / debts.length : 0;
+  const totalBalance = debts?.reduce((s, d) => s + d.remaining_balance_cents, 0) ?? 0;
+  const totalMinPayments = debts?.reduce((s, d) => s + d.minimum_payment_cents, 0) ?? 0;
+  const avgApr = debts && debts.length > 0 ? debts.reduce((s, d) => s + Number(d.interest_rate), 0) / debts.length : 0;
 
   return (
     <motion.div

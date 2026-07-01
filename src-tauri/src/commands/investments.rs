@@ -51,8 +51,23 @@ pub async fn list_investments(
                 .map_err(|e| e.to_string())
         }
         None => {
-            let empty = Vec::new();
-            Ok(empty)
+            let mut all = Vec::new();
+            for asset_type in &[
+                AssetType::Stock,
+                AssetType::Bond,
+                AssetType::ETF,
+                AssetType::MutualFund,
+                AssetType::Crypto,
+                AssetType::RealEstate,
+                AssetType::Commodity,
+                AssetType::Cash,
+                AssetType::Other,
+            ] {
+                if let Ok(more) = repo.list_by_asset_type(asset_type.clone()).await {
+                    all.extend(more);
+                }
+            }
+            Ok(all)
         }
     }
 }
@@ -124,4 +139,32 @@ pub async fn update_investment(
     investment.updated_at = Utc::now();
 
     repo.update(investment).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn get_investment(state: State<'_, AppState>, id: String) -> Result<Investment, String> {
+    let uuid = Uuid::parse_str(&id).map_err(|e| format!("invalid id: {e}"))?;
+    let repo = SqlInvestmentRepository::new(state.pool.clone());
+    repo.get_by_id(uuid)
+        .await
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "investment not found".to_string())
+}
+
+#[tauri::command]
+pub async fn delete_investment(state: State<'_, AppState>, id: String) -> Result<(), String> {
+    let uuid = Uuid::parse_str(&id).map_err(|e| format!("invalid id: {e}"))?;
+    let repo = SqlInvestmentRepository::new(state.pool.clone());
+    repo.delete(uuid).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn list_investments_by_type(
+    state: State<'_, AppState>,
+    asset_type: AssetType,
+) -> Result<Vec<Investment>, String> {
+    let repo = SqlInvestmentRepository::new(state.pool.clone());
+    repo.list_by_asset_type(asset_type)
+        .await
+        .map_err(|e| e.to_string())
 }

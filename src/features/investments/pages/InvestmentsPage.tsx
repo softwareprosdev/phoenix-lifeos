@@ -168,7 +168,7 @@ export default function InvestmentsPage() {
               </thead>
               <tbody>
                 {investments?.map((inv, idx) => {
-                  const value = Math.round(inv.shares * inv.current_price_cents);
+                  const value = inv.current_value_cents;
                   const gain = value - inv.cost_basis_cents;
                   const gainPct = inv.cost_basis_cents > 0 ? (gain / inv.cost_basis_cents) * 100 : 0;
                   return (
@@ -181,8 +181,8 @@ export default function InvestmentsPage() {
                     >
                       <td className="py-2.5 pr-2 font-semibold text-white">{inv.symbol}</td>
                       <td className="py-2.5 pr-2 text-[hsl(0_0%_50%)] text-xs">{inv.name}</td>
-                      <td className="py-2.5 pr-2 text-right text-white">{inv.shares}</td>
-                      <td className="py-2.5 pr-2 text-right text-[hsl(0_0%_50%)]">{formatCurrency(inv.current_price_cents)}</td>
+                      <td className="py-2.5 pr-2 text-right text-white">{inv.quantity}</td>
+                      <td className="py-2.5 pr-2 text-right text-[hsl(0_0%_50%)]">{formatCurrency(inv.current_value_cents)}</td>
                       <td className="py-2.5 text-right">
                         <p className="text-white font-medium">{formatCurrency(value)}</p>
                         <p className={`text-[10px] ${gain >= 0 ? "text-[hsl(142_72%_45%)]" : "text-[hsl(0_84%_60%)]"}`}>

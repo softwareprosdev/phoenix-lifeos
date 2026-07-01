@@ -81,7 +81,7 @@ export default function DashboardPage() {
       className="p-6 h-full overflow-auto"
     >
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-3 gap-4 auto-rows-[180px]">
+        <div className="grid grid-cols-3 gap-4 auto-rows-[220px]">
           {displayItems.map((widget) => {
             const Component = widgetComponents[widget.type];
             if (!Component) return null;

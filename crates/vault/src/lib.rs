@@ -1,3 +1,7 @@
+mod document;
+
+pub use document::*;
+
 use chrono::Utc;
 use phoenix_core::entities::{VaultAccessAction, VaultAccessLog, VaultItem, VaultItemType};
 use phoenix_core::event_bus::{DomainEvent, EventBus};
@@ -6,6 +10,7 @@ use phoenix_db::repositories::vault_repo::{
     SqlVaultItemRepository,
 };
 use phoenix_db::DbPool;
+use phoenix_security::cipher;
 use tracing::instrument;
 use uuid::Uuid;
 
@@ -13,7 +18,7 @@ use uuid::Uuid;
 pub struct CreateVaultItemInput {
     pub item_type: VaultItemType,
     pub title: String,
-    pub encrypted_data: String,
+    pub data: String,
     pub key_version: i32,
     pub metadata: String,
 }
@@ -23,7 +28,7 @@ pub struct UpdateVaultItemInput {
     pub id: Uuid,
     pub item_type: VaultItemType,
     pub title: String,
-    pub encrypted_data: String,
+    pub data: String,
     pub key_version: i32,
     pub metadata: String,
 }
@@ -31,34 +36,52 @@ pub struct UpdateVaultItemInput {
 pub struct VaultService {
     item_repo: SqlVaultItemRepository,
     access_log_repo: SqlVaultAccessLogRepository,
+    vault_key: [u8; 32],
     event_bus: Option<EventBus>,
 }
 
 impl VaultService {
-    pub fn new(pool: DbPool) -> Self {
+    pub fn new(pool: DbPool, vault_key: [u8; 32]) -> Self {
         Self {
             item_repo: SqlVaultItemRepository::new(pool.clone()),
             access_log_repo: SqlVaultAccessLogRepository::new(pool),
+            vault_key,
             event_bus: None,
         }
     }
 
-    pub fn with_event_bus(pool: DbPool, event_bus: EventBus) -> Self {
+    pub fn with_event_bus(pool: DbPool, vault_key: [u8; 32], event_bus: EventBus) -> Self {
         Self {
             item_repo: SqlVaultItemRepository::new(pool.clone()),
             access_log_repo: SqlVaultAccessLogRepository::new(pool),
+            vault_key,
             event_bus: Some(event_bus),
         }
+    }
+
+    fn encrypt(&self, plaintext: &str) -> anyhow::Result<String> {
+        Ok(cipher::encrypt(&self.vault_key, plaintext.as_bytes())?)
+    }
+
+    fn decrypt(&self, ciphertext: &str) -> anyhow::Result<String> {
+        let bytes = cipher::decrypt(&self.vault_key, ciphertext)?;
+        Ok(String::from_utf8(bytes)?)
+    }
+
+    fn decrypt_item(&self, mut item: VaultItem) -> anyhow::Result<VaultItem> {
+        item.encrypted_data = self.decrypt(&item.encrypted_data)?;
+        Ok(item)
     }
 
     #[instrument(skip(self))]
     pub async fn create_item(&self, input: CreateVaultItemInput) -> anyhow::Result<VaultItem> {
         let now = Utc::now();
+        let encrypted = self.encrypt(&input.data)?;
         let item = VaultItem {
             id: Uuid::new_v4(),
             item_type: input.item_type,
             title: input.title,
-            encrypted_data: input.encrypted_data,
+            encrypted_data: encrypted,
             key_version: input.key_version,
             metadata: input.metadata,
             created_at: now,
@@ -77,13 +100,13 @@ impl VaultService {
             .await;
         }
 
-        Ok(created)
+        self.decrypt_item(created)
     }
 
     #[instrument(skip(self))]
     pub async fn get_item(&self, id: Uuid) -> anyhow::Result<Option<VaultItem>> {
         let item = self.item_repo.get_by_id(id).await?;
-        if item.is_some() {
+        if let Some(item) = item {
             self.log_access(id, VaultAccessAction::View).await;
             if let Some(ref bus) = self.event_bus {
                 bus.publish(DomainEvent::VaultItemAccessed {
@@ -93,18 +116,21 @@ impl VaultService {
                 })
                 .await;
             }
+            Ok(Some(self.decrypt_item(item)?))
+        } else {
+            Ok(None)
         }
-        Ok(item)
     }
 
     #[instrument(skip(self))]
     pub async fn update_item(&self, input: UpdateVaultItemInput) -> anyhow::Result<VaultItem> {
         let now = Utc::now();
+        let encrypted = self.encrypt(&input.data)?;
         let item = VaultItem {
             id: input.id,
             item_type: input.item_type,
             title: input.title,
-            encrypted_data: input.encrypted_data,
+            encrypted_data: encrypted,
             key_version: input.key_version,
             metadata: input.metadata,
             created_at: now,
@@ -123,7 +149,7 @@ impl VaultService {
             .await;
         }
 
-        Ok(updated)
+        self.decrypt_item(updated)
     }
 
     #[instrument(skip(self))]
@@ -144,12 +170,32 @@ impl VaultService {
 
     #[instrument(skip(self))]
     pub async fn list_by_type(&self, item_type: VaultItemType) -> anyhow::Result<Vec<VaultItem>> {
-        self.item_repo.list_by_type(item_type).await
+        let items = self.item_repo.list_by_type(item_type).await?;
+        items.into_iter().map(|i| self.decrypt_item(i)).collect()
+    }
+
+    #[instrument(skip(self))]
+    pub async fn list_all(&self) -> anyhow::Result<Vec<VaultItem>> {
+        let mut all = Vec::new();
+        for t in &[
+            VaultItemType::Password,
+            VaultItemType::Note,
+            VaultItemType::Key,
+            VaultItemType::Secret,
+        ] {
+            if let Ok(more) = self.item_repo.list_by_type(t.clone()).await {
+                for item in more {
+                    all.push(self.decrypt_item(item)?);
+                }
+            }
+        }
+        Ok(all)
     }
 
     #[instrument(skip(self))]
     pub async fn search(&self, query: &str) -> anyhow::Result<Vec<VaultItem>> {
-        self.item_repo.search(query).await
+        let items = self.item_repo.search(query).await?;
+        items.into_iter().map(|i| self.decrypt_item(i)).collect()
     }
 
     #[instrument(skip(self))]
@@ -177,6 +223,10 @@ impl VaultService {
 mod tests {
     use super::*;
     use sqlx::SqlitePool;
+
+    fn test_key() -> [u8; 32] {
+        [42u8; 32]
+    }
 
     async fn create_test_db() -> SqlitePool {
         let pool = SqlitePool::connect(":memory:").await.unwrap();
@@ -207,32 +257,65 @@ mod tests {
     #[tokio::test]
     async fn test_create_vault_item() {
         let pool = create_test_db().await;
-        let svc = VaultService::new(pool);
+        let svc = VaultService::new(pool, test_key());
         let item = svc
             .create_item(CreateVaultItemInput {
                 item_type: VaultItemType::Password,
                 title: "Email Login".into(),
-                encrypted_data: "base64encrypted".into(),
+                data: "my-secret-password".into(),
                 key_version: 1,
                 metadata: "{}".into(),
             })
             .await
             .unwrap();
         assert_eq!(item.title, "Email Login");
+        assert_eq!(item.encrypted_data, "my-secret-password");
 
         let fetched = svc.get_item(item.id).await.unwrap();
         assert!(fetched.is_some());
+        assert_eq!(fetched.unwrap().encrypted_data, "my-secret-password");
+    }
+
+    #[tokio::test]
+    async fn test_data_is_encrypted_at_rest() {
+        let pool = create_test_db().await;
+        let svc = VaultService::new(pool.clone(), test_key());
+        let item = svc
+            .create_item(CreateVaultItemInput {
+                item_type: VaultItemType::Note,
+                title: "Secret".into(),
+                data: "plaintext-value".into(),
+                key_version: 1,
+                metadata: "{}".into(),
+            })
+            .await
+            .unwrap();
+
+        // Read raw from DB to verify it's not stored as plaintext
+        let row: (String,) =
+            sqlx::query_as("SELECT encrypted_data FROM vault_items WHERE id = ?")
+                .bind(item.id.to_string())
+                .fetch_one(&pool)
+                .await
+                .unwrap();
+        assert_ne!(row.0, "plaintext-value");
+        // Should be base64-encoded (nonce + ciphertext)
+        assert!(
+            row.0.len() > 16 && row.0.chars().all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '/' || c == '='),
+            "expected base64-encoded ciphertext, got: {}",
+            row.0
+        );
     }
 
     #[tokio::test]
     async fn test_access_logging() {
         let pool = create_test_db().await;
-        let svc = VaultService::new(pool);
+        let svc = VaultService::new(pool, test_key());
         let item = svc
             .create_item(CreateVaultItemInput {
                 item_type: VaultItemType::Note,
                 title: "Secret Note".into(),
-                encrypted_data: "encrypted".into(),
+                data: "encrypted".into(),
                 key_version: 1,
                 metadata: "{}".into(),
             })
@@ -247,11 +330,11 @@ mod tests {
     #[tokio::test]
     async fn test_search() {
         let pool = create_test_db().await;
-        let svc = VaultService::new(pool);
+        let svc = VaultService::new(pool, test_key());
         svc.create_item(CreateVaultItemInput {
             item_type: VaultItemType::Password,
             title: "Bank Login".into(),
-            encrypted_data: "enc".into(),
+            data: "bank-password".into(),
             key_version: 1,
             metadata: "{}".into(),
         })

@@ -27,7 +27,7 @@ export function NetWorthWidget() {
           {change >= 0 ? "+" : ""}{formatCurrency(change)} ({changePercent >= 0 ? "+" : ""}{changePercent.toFixed(1)}%)
         </span>
       </div>
-      <div className="h-20 mt-3">
+      <div className="h-24 mt-3">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data}>
             <defs>
