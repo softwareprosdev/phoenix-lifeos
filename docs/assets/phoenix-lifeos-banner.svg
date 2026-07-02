@@ -1,0 +1,16 @@
+<svg width="1400" height="320" viewBox="0 0 1400 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Phoenix LifeOS</title>
+  <desc id="desc">The complete personal financial and life operating system</desc>
+  <rect width="1400" height="320" fill="#0B1120"/>
+  <path d="M0 252C119 223 239 222 360 249C498 280 626 302 774 266C923 230 1040 177 1181 210C1262 229 1336 267 1400 290V320H0V252Z" fill="#1D4ED8" fill-opacity="0.36"/>
+  <path d="M0 218C147 185 276 202 392 226C535 256 655 273 806 231C957 189 1077 124 1226 157C1294 172 1351 201 1400 230V320H0V218Z" fill="#2563EB" fill-opacity="0.28"/>
+  <circle cx="1120" cy="74" r="142" fill="#2563EB" fill-opacity="0.16"/>
+  <circle cx="270" cy="248" r="180" fill="#0EA5E9" fill-opacity="0.12"/>
+  <g transform="translate(180 72)">
+    <path d="M69 0C48 25 43 49 55 72C36 61 22 46 13 27C2 55 5 81 23 105C39 126 64 138 93 138C126 138 151 124 166 101C181 77 180 51 162 25C160 50 150 68 132 80C136 49 115 20 69 0Z" fill="#F97316"/>
+    <path d="M93 39C81 55 79 70 88 84C77 80 68 72 62 61C55 78 57 95 69 109C78 120 93 126 110 126C129 126 143 118 151 105C160 91 158 76 146 61C145 75 139 85 128 92C130 73 118 55 93 39Z" fill="#FACC15"/>
+  </g>
+  <text x="380" y="130" fill="#FFFFFF" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="72" font-weight="800" letter-spacing="0">Phoenix LifeOS</text>
+  <text x="384" y="178" fill="#CBD5E1" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="24" font-weight="500">The complete personal financial and life operating system</text>
+  <text x="386" y="222" fill="#93C5FD" font-family="JetBrains Mono, Consolas, monospace" font-size="18" font-weight="600">Rust + Tauri + React | Offline-first | Encrypted | Credit Repair Ready</text>
+</svg>

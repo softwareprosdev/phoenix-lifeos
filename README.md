@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=24,12,29&height=260&section=header&text=Phoenix%20LifeOS&fontSize=72&fontColor=ffffff&animation=fadeIn&fontAlignY=42&desc=The%20Complete%20Personal%20Financial%20%26%20Life%20Operating%20System&descColor=cdd6f4&descSize=18&descAlignY=63" width="100%" />
+<img src="./docs/assets/phoenix-lifeos-banner.svg" width="100%" alt="Phoenix LifeOS - The complete personal financial and life operating system" />
 
 <br/>
 
