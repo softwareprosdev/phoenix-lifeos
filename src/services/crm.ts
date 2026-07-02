@@ -1,46 +1,32 @@
-import { invoke } from "@tauri-apps/api/core";
+import { safeInvoke } from "./commandClient";
 import type { Contact, ContactInteraction, CreateContactInput, CreateInteractionInput } from "@/types";
 
-class CrmServiceError extends Error {
-  constructor(message: string, public cause?: unknown) {
-    super(message);
-    this.name = "CrmServiceError";
-  }
-}
-
-async function safeInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
-  try {
-    return await invoke<T>(cmd, args);
-  } catch (err) {
-    throw new CrmServiceError(`IPC call '${cmd}' failed`, err);
-  }
-}
 
 export const crmService = {
-  listContacts: () => safeInvoke<Contact[]>("list_contacts"),
+  listContacts: () => safeInvoke<Contact[]>("Crm", "list_contacts"),
 
-  getContact: (id: string) => safeInvoke<Contact>("get_contact", { id }),
+  getContact: (id: string) => safeInvoke<Contact>("Crm", "get_contact", { id }),
 
   createContact: (input: CreateContactInput) =>
-    safeInvoke<Contact>("create_contact", { payload: input }),
+    safeInvoke<Contact>("Crm", "create_contact", { payload: input }),
 
   updateContact: (id: string, input: Partial<CreateContactInput>) =>
-    safeInvoke<Contact>("update_contact", { id, payload: input }),
+    safeInvoke<Contact>("Crm", "update_contact", { id, payload: input }),
 
-  deleteContact: (id: string) => safeInvoke<void>("delete_contact", { id }),
+  deleteContact: (id: string) => safeInvoke<void>("Crm", "delete_contact", { id }),
 
   searchContacts: (query: string) =>
-    safeInvoke<Contact[]>("search_contacts", { query }),
+    safeInvoke<Contact[]>("Crm", "search_contacts", { query }),
 
   listInteractions: (contactId: string) =>
-    safeInvoke<ContactInteraction[]>("list_contact_interactions", { contactId }),
+    safeInvoke<ContactInteraction[]>("Crm", "list_contact_interactions", { contactId }),
 
   createInteraction: (input: CreateInteractionInput) =>
-    safeInvoke<ContactInteraction>("create_contact_interaction", { payload: input }),
+    safeInvoke<ContactInteraction>("Crm", "create_contact_interaction", { payload: input }),
 
   updateInteraction: (id: string, input: Partial<CreateInteractionInput>) =>
-    safeInvoke<ContactInteraction>("update_contact_interaction", { id, payload: input }),
+    safeInvoke<ContactInteraction>("Crm", "update_contact_interaction", { id, payload: input }),
 
   deleteInteraction: (id: string) =>
-    safeInvoke<void>("delete_contact_interaction", { id }),
+    safeInvoke<void>("Crm", "delete_contact_interaction", { id }),
 };

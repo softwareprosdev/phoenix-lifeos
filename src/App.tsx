@@ -34,6 +34,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: "budget", label: "Budget", icon: Target },
   { id: "debt", label: "Debt", icon: TrendingDown },
   { id: "credit", label: "Credit", icon: CreditCard },
+  { id: "credit/repair", label: "Credit Repair", icon: Shield },
   { id: "investments", label: "Investments", icon: BarChart2, section: "Assets" },
   { id: "goals", label: "Goals", icon: Target },
   { id: "vault", label: "Vault", icon: Shield, section: "Secure" },

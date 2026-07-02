@@ -6,11 +6,11 @@ import path from "path";
 export default defineConfig(async () => ({
   plugins: [react()],
 
-  // Vite dev server: use random port, listen on all interfaces for Tauri
+  // Keep this aligned with src-tauri/tauri.conf.json build.devUrl.
   server: {
-    port: 5173,
+    port: 5174,
     strictPort: true,
-    host: process.env.TAURI_DEV_HOST || false,
+    host: process.env.TAURI_DEV_HOST || "127.0.0.1",
     hmr: process.env.TAURI_DEV_HOST
       ? {
           protocol: "ws",

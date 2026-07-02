@@ -12,7 +12,9 @@ import {
   useDisputeLetters, useGenerateLetter, useLetterTemplates,
   useMarkLetterSent, useAddTimelineEntry,
   useCreditAccounts, useCreditInquiries, useDerogatoryItems,
-  useBusinessCreditProfiles,
+  useBusinessCreditProfiles, useCreateDisputeCase,
+  useCreateCreditAccount, useCreateCreditInquiry,
+  useCreateDerogatoryItem, useCreateBusinessCreditProfile,
 } from "../hooks/useCreditRepairData";
 import { DisputeLetterPreview } from "../components/DisputeLetter";
 
@@ -201,6 +203,11 @@ export default function CreditRepairPage() {
   const { data: caseLetters } = useDisputeLetters(selectedCaseId);
   const markSent = useMarkLetterSent();
   const addTimeline = useAddTimelineEntry();
+  const createDisputeCase = useCreateDisputeCase();
+  const createCreditAccount = useCreateCreditAccount();
+  const createCreditInquiry = useCreateCreditInquiry();
+  const createDerogatoryItem = useCreateDerogatoryItem();
+  const createBusinessProfile = useCreateBusinessCreditProfile();
 
   const wonCount = cases?.filter((c) => c.status === "won").length ?? 0;
   const inProgressCount = cases?.filter((c) => c.status === "in_progress").length ?? 0;
@@ -223,6 +230,78 @@ export default function CreditRepairPage() {
         });
       }
     }
+  };
+
+  const handleCreateDisputeCase = async () => {
+    const creditor = prompt("Creditor or furnisher name:");
+    if (!creditor) return;
+    const bureau = prompt("Bureau:", "Experian") || "Experian";
+    const disputeType = prompt("Dispute type:", "inaccurate_information") || "inaccurate_information";
+    const notes = prompt("Dispute notes/reason:", `Dispute ${creditor} as inaccurate or unverifiable.`) || "";
+    const created = await createDisputeCase.mutateAsync({
+      creditor_name: creditor,
+      bureau,
+      dispute_type: disputeType,
+      reason: notes,
+      notes,
+      status: "draft",
+    });
+    setSelectedCaseId(created.id);
+  };
+
+  const handleCreateCreditAccount = async () => {
+    const creditor = prompt("Creditor name:");
+    if (!creditor) return;
+    const limit = Number(prompt("Credit limit in dollars:", "1000") || "0");
+    const balance = Number(prompt("Current balance in dollars:", "0") || "0");
+    await createCreditAccount.mutateAsync({
+      creditor_name: creditor,
+      account_type: prompt("Account type:", "revolving") || "revolving",
+      bureau: prompt("Bureau:", "Experian") || "Experian",
+      credit_limit_cents: Math.round(limit * 100),
+      balance_cents: Math.round(balance * 100),
+      payment_status: prompt("Payment status:", "current") || "current",
+      opened_date: new Date().toISOString(),
+    });
+  };
+
+  const handleCreateInquiry = async () => {
+    const creditor = prompt("Inquiry creditor:");
+    if (!creditor) return;
+    await createCreditInquiry.mutateAsync({
+      creditor_name: creditor,
+      bureau: prompt("Bureau:", "Experian") || "Experian",
+      inquiry_type: prompt("Inquiry type:", "hard") || "hard",
+      inquiry_date: new Date().toISOString(),
+    });
+  };
+
+  const handleCreateDerogatory = async () => {
+    const creditor = prompt("Derogatory creditor/collector:");
+    if (!creditor) return;
+    await createDerogatoryItem.mutateAsync({
+      creditor_name: creditor,
+      bureau: prompt("Bureau:", "Experian") || "Experian",
+      derogatory_type: prompt("Item type:", "collection") || "collection",
+      account_number_masked: prompt("Masked account number:", "****") || "****",
+      date_reported: new Date().toISOString(),
+      date_expected_removal: new Date(new Date().setFullYear(new Date().getFullYear() + 7)).toISOString(),
+      description: prompt("Description:", "Disputed derogatory item") || "Disputed derogatory item",
+    });
+  };
+
+  const handleCreateBusinessProfile = async () => {
+    const businessName = prompt("Business name:");
+    if (!businessName) return;
+    const score = Number(prompt("Business credit score:", "75") || "0");
+    const paydex = Number(prompt("Paydex score:", "80") || "0");
+    await createBusinessProfile.mutateAsync({
+      business_name: businessName,
+      ein: prompt("Masked EIN:", "**-*******") || "",
+      industry: prompt("Industry:", "General") || "General",
+      business_credit_score: score,
+      paydex_score: paydex,
+    });
   };
 
   if (casesLoading) {
@@ -271,6 +350,25 @@ export default function CreditRepairPage() {
       {/* Overview Tab */}
       {selectedTab === "overview" && (
         <>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={handleCreateDisputeCase}
+              disabled={createDisputeCase.isPending}
+              className="inline-flex items-center gap-2 rounded bg-[hsl(220_90%_56%)] px-3 py-2 text-xs font-medium text-white hover:bg-[hsl(220_90%_48%)] transition-colors disabled:opacity-50"
+            >
+              {createDisputeCase.isPending ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+              New Dispute Case
+            </button>
+            <button
+              onClick={handleCreateDerogatory}
+              disabled={createDerogatoryItem.isPending}
+              className="inline-flex items-center gap-2 rounded border border-[hsl(220_15%_22%)] px-3 py-2 text-xs font-medium text-white hover:bg-[hsl(220_15%_18%)] transition-colors disabled:opacity-50"
+            >
+              {createDerogatoryItem.isPending ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+              Add Derogatory Item
+            </button>
+          </div>
+
           {/* Stats Dashboard */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div className="rounded-lg p-4 bg-[hsl(220_15%_14%/0.7)] border border-[hsl(220_15%_22%/0.6)]">
@@ -591,6 +689,33 @@ export default function CreditRepairPage() {
       {/* Accounts Tab */}
       {selectedTab === "accounts" && (
         <>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={handleCreateCreditAccount}
+              disabled={createCreditAccount.isPending}
+              className="inline-flex items-center gap-2 rounded bg-[hsl(220_90%_56%)] px-3 py-2 text-xs font-medium text-white hover:bg-[hsl(220_90%_48%)] transition-colors disabled:opacity-50"
+            >
+              {createCreditAccount.isPending ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+              Add Credit Account
+            </button>
+            <button
+              onClick={handleCreateInquiry}
+              disabled={createCreditInquiry.isPending}
+              className="inline-flex items-center gap-2 rounded border border-[hsl(220_15%_22%)] px-3 py-2 text-xs font-medium text-white hover:bg-[hsl(220_15%_18%)] transition-colors disabled:opacity-50"
+            >
+              {createCreditInquiry.isPending ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+              Add Inquiry
+            </button>
+            <button
+              onClick={handleCreateDerogatory}
+              disabled={createDerogatoryItem.isPending}
+              className="inline-flex items-center gap-2 rounded border border-[hsl(220_15%_22%)] px-3 py-2 text-xs font-medium text-white hover:bg-[hsl(220_15%_18%)] transition-colors disabled:opacity-50"
+            >
+              {createDerogatoryItem.isPending ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+              Add Derogatory
+            </button>
+          </div>
+
           {/* Credit Accounts */}
           <CollapsibleSection title="Credit Accounts" count={creditAccounts?.length}>
             <div className="overflow-x-auto">
@@ -711,6 +836,17 @@ export default function CreditRepairPage() {
       {/* Business Tab */}
       {selectedTab === "business" && (
         <>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={handleCreateBusinessProfile}
+              disabled={createBusinessProfile.isPending}
+              className="inline-flex items-center gap-2 rounded bg-[hsl(220_90%_56%)] px-3 py-2 text-xs font-medium text-white hover:bg-[hsl(220_90%_48%)] transition-colors disabled:opacity-50"
+            >
+              {createBusinessProfile.isPending ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+              Add Business Profile
+            </button>
+          </div>
+
           {businessProfiles && businessProfiles.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {businessProfiles.map((bp) => (

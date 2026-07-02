@@ -1,6 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { creditService } from "@/services";
-import type { DisputeCase } from "@/types";
+import type {
+  BusinessCreditProfile,
+  CreditAccount,
+  CreditDerogatory,
+  CreditInquiry,
+  DisputeCase,
+} from "@/types";
 
 export function useDisputeCases() {
   return useQuery({
@@ -90,10 +96,40 @@ export function useCreditAccounts() {
   });
 }
 
+export function useCreateCreditAccount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Partial<CreditAccount>) => creditService.createCreditAccount(input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["credit-repair", "credit-accounts"] });
+    },
+  });
+}
+
+export function useDeleteCreditAccount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => creditService.deleteCreditAccount(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["credit-repair", "credit-accounts"] });
+    },
+  });
+}
+
 export function useCreditInquiries() {
   return useQuery({
     queryKey: ["credit-repair", "inquiries"],
     queryFn: () => creditService.listCreditInquiries(),
+  });
+}
+
+export function useCreateCreditInquiry() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Partial<CreditInquiry>) => creditService.createCreditInquiry(input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["credit-repair", "inquiries"] });
+    },
   });
 }
 
@@ -104,9 +140,31 @@ export function useDerogatoryItems() {
   });
 }
 
+export function useCreateDerogatoryItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Partial<CreditDerogatory>) => creditService.createDerogatoryItem(input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["credit-repair", "derogatory"] });
+      qc.invalidateQueries({ queryKey: ["credit-repair", "cases"] });
+    },
+  });
+}
+
 export function useBusinessCreditProfiles() {
   return useQuery({
     queryKey: ["credit-repair", "business-profiles"],
     queryFn: () => creditService.getBusinessCreditProfiles(),
+  });
+}
+
+export function useCreateBusinessCreditProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Partial<BusinessCreditProfile>) =>
+      creditService.createBusinessCreditProfile(input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["credit-repair", "business-profiles"] });
+    },
   });
 }
